@@ -1,0 +1,14 @@
+# Copy to .dev.vars for `wrangler dev`.
+
+# Signs widget session tokens. Use a long random string in production (wrangler secret put).
+WIDGET_TOKEN_SECRET=dev-widget-secret
+
+# Platform-admin token for /api/admin/* (set plans, list workspaces).
+ADMIN_TOKEN=dev-admin
+
+# Option A: real Clerk (create an application at https://dashboard.clerk.com, enable Organizations).
+# CLERK_PUBLISHABLE_KEY=pk_test_...
+# CLERK_SECRET_KEY=sk_test_...
+
+# Option B: no Clerk account needed. Accepts unsigned dev sessions on localhost only.
+DEV_AUTH=true
