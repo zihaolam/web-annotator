@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Acme Dashboard · Web Annotator demo</title>
+    <style>
+      :root { color-scheme: light; --line: #e7e5e4; --muted: #78716c; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color: #1c1917; background: #fafaf9; }
+      header { display: flex; align-items: center; gap: 24px; padding: 14px 32px; border-bottom: 1px solid var(--line); background: #fff; position: sticky; top: 0; z-index: 5; }
+      header nav { display: flex; gap: 16px; }
+      header a { color: var(--muted); text-decoration: none; }
+      header a.active { color: #1c1917; font-weight: 600; }
+      .logo { font-weight: 700; letter-spacing: -0.02em; }
+      main { max-width: 1080px; margin: 0 auto; padding: 32px; display: grid; gap: 24px; }
+      .hero { display: flex; justify-content: space-between; align-items: end; }
+      h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
+      .muted { color: var(--muted); }
+      .btn { border: 0; border-radius: 8px; padding: 9px 14px; font: inherit; font-weight: 600; background: #1c1917; color: #fff; cursor: pointer; }
+      .btn-secondary { background: #fff; color: #1c1917; border: 1px solid var(--line); }
+      .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+      .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+      .stat-value { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; }
+      .delta-up { color: #15803d; font-weight: 600; }
+      .delta-down { color: #b91c1c; font-weight: 600; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+      th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+      .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+      .pill-open { background: #fef3c7; color: #92400e; }
+      .pill-paid { background: #dcfce7; color: #166534; }
+      .split { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+      .activity { max-height: 220px; overflow: auto; display: grid; gap: 12px; }
+      .activity p { margin: 0; }
+      form { display: grid; gap: 12px; }
+      label { display: grid; gap: 4px; font-weight: 600; font-size: 13px; }
+      input, select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
+      footer { text-align: center; padding: 48px; color: var(--muted); }
+      kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; background: #fff; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <span class="logo">◆ Acme</span>
+      <nav>
+        <a class="active" href="#">Overview</a>
+        <a href="#claims">Claims</a>
+        <a href="#settings">Settings</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <h1>Good morning, Dana</h1>
+          <p class="muted">
+            Press <kbd>C</kbd> (or the comment button in the toolbar) and click any element to leave a comment.
+            Use <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> to walk the DOM, <kbd>Esc</kbd> to exit.
+          </p>
+        </div>
+        <button class="btn" id="new-claim" type="button" onclick="alert('The page still works when the annotator is idle.')">New claim</button>
+      </section>
+
+      <section class="stats">
+        <div class="card" data-testid="stat-open">
+          <div class="muted">Open claims</div>
+          <div class="stat-value">128</div>
+          <div class="delta-up">+12% this week</div>
+        </div>
+        <div class="card" data-testid="stat-settled">
+          <div class="muted">Settled</div>
+          <div class="stat-value">$1.24M</div>
+          <div class="delta-up">+4.1%</div>
+        </div>
+        <div class="card" data-testid="stat-cycle">
+          <div class="muted">Avg. cycle time</div>
+          <div class="stat-value">9.2 days</div>
+          <div class="delta-down">+0.8 days</div>
+        </div>
+      </section>
+
+      <section class="split">
+        <div class="card">
+          <h2 style="margin-top: 0">Recent claims</h2>
+          <table>
+            <thead>
+              <tr><th>Claimant</th><th>Type</th><th>Amount</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Jordan Lee</td><td>Motor injury</td><td>$12,400</td><td><span class="pill pill-open">Open</span></td></tr>
+              <tr><td>Sam Rivera</td><td>Workplace</td><td>$8,950</td><td><span class="pill pill-paid">Paid</span></td></tr>
+              <tr><td>Alex Tan</td><td>Public liability</td><td>$21,000</td><td><span class="pill pill-open">Open</span></td></tr>
+              <tr><td>Morgan Ng</td><td>Motor injury</td><td>$4,300</td><td><span class="pill pill-paid">Paid</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h2 style="margin-top: 0">Activity</h2>
+          <div class="activity">
+            <p><strong>Priya</strong> uploaded a medical report</p>
+            <p><strong>Chen</strong> approved settlement #4821</p>
+            <p><strong>Dana</strong> requested police report</p>
+            <p><strong>Lee</strong> flagged claim #4810 for review</p>
+            <p><strong>Ana</strong> added adjuster notes</p>
+            <p><strong>Ravi</strong> scheduled assessment</p>
+            <p><strong>Priya</strong> closed claim #4799</p>
+            <p><strong>Chen</strong> updated reserve amount</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 style="margin-top: 0">Quick intake</h2>
+        <form onsubmit="event.preventDefault()">
+          <label>Claimant name <input name="claimant" placeholder="Full name" /></label>
+          <label>Injury type
+            <select name="type"><option>Motor</option><option>Workplace</option><option>Public liability</option></select>
+          </label>
+          <div style="display: flex; gap: 8px">
+            <button class="btn" type="submit">Create</button>
+            <button class="btn btn-secondary" type="reset">Clear</button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <footer>Demo page for web-annotator. Comments are stored in Cloudflare D1.</footer>
+
+    <!-- The whole integration: one script tag. -->
+    <script src="/script.js" data-project="demo" defer></script>
+  </body>
+</html>

@@ -1,0 +1,2 @@
+# Copy to .dev.vars for `wrangler dev`. Used to authorize POST /api/projects.
+ADMIN_TOKEN=change-me

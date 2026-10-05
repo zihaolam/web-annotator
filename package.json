@@ -1,0 +1,35 @@
+{
+  "name": "web-annotator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run build:widget && bun run db:migrate:local && bun run db:seed:local && bun run --parallel dev:widget dev:worker",
+    "dev:widget": "NODE_ENV=development bun scripts/build-widget.ts --watch",
+    "dev:worker": "wrangler dev",
+    "build": "bun run build:widget",
+    "build:widget": "bun scripts/build-widget.ts",
+    "deploy": "bun run build && wrangler d1 migrations apply web-annotator --remote && wrangler deploy",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply web-annotator --local",
+    "db:seed:local": "wrangler d1 execute web-annotator --local --file scripts/seed-local.sql",
+    "test": "bun test",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.3",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261005.1",
+    "@preact/signals": "^2.11.3",
+    "@tailwindcss/cli": "^4.3.3",
+    "@types/bun": "^1.4.2",
+    "drizzle-kit": "^0.31.11",
+    "playwright-core": "^1.63.0",
+    "preact": "^11.0.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.147.0"
+  }
+}

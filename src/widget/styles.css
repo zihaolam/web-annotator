@@ -1,0 +1,137 @@
+@layer theme, base, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@source "./";
+
+/*
+ * Design tokens follow react-grab's palette. The widget renders in the theme
+ * opposite to the host app (dark app => light panels) so it always stands out.
+ */
+/* Keyframes animate the standalone `translate`/`scale` properties so they compose
+ * with the inline `transform` used for positioning instead of overriding it. */
+@theme {
+  --font-sans: "Geist", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-panel: var(--wa-panel-bg);
+  --color-fg: var(--wa-text-primary);
+  --color-fg-muted: var(--wa-text-secondary);
+  --color-hover: var(--wa-surface-hover);
+  --color-active: var(--wa-surface-active);
+  --color-line: var(--wa-border-subtle);
+  --color-line-strong: var(--wa-border-button);
+  --color-submit: var(--wa-submit-bg);
+  --color-submit-fg: var(--wa-submit-fg);
+  --color-danger: var(--wa-error-text);
+  --color-danger-bg: var(--wa-error-bg);
+  --color-danger-bg-hover: var(--wa-error-bg-hover);
+  --color-accent: rgb(210 57 192);
+  --shadow-panel: var(--wa-shadow);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-shake: shake 0.3s ease-out;
+  --animate-shimmer: shimmer 2.5s linear infinite;
+  --animate-pop: pop 160ms var(--ease-spring);
+  --animate-fade-in: fade-in 120ms ease-out;
+
+  @keyframes shake {
+    0%, 100% { translate: 0; }
+    20% { translate: -3px; }
+    40% { translate: 3px; }
+    60% { translate: -2px; }
+    80% { translate: 2px; }
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  @keyframes pop {
+    0% { scale: 0.6; opacity: 0; }
+    100% { scale: 1; opacity: 1; }
+  }
+  @keyframes fade-in {
+    0% { opacity: 0; scale: 0.97; }
+    100% { opacity: 1; scale: 1; }
+  }
+}
+
+:host {
+  all: initial;
+  direction: ltr;
+  /* dark panel tokens (default, used on light apps) */
+  --wa-panel-bg: #161616;
+  --wa-text-primary: #fff;
+  --wa-text-secondary: #a7a7a7;
+  --wa-surface-hover: rgba(255, 255, 255, 0.1);
+  --wa-surface-active: rgba(255, 255, 255, 0.15);
+  --wa-border-subtle: rgba(255, 255, 255, 0.1);
+  --wa-border-button: rgba(255, 255, 255, 0.2);
+  --wa-submit-bg: #fff;
+  --wa-submit-fg: #161616;
+  --wa-error-text: #f87171;
+  --wa-error-bg: #3d1515;
+  --wa-error-bg-hover: #4d1f1f;
+  --wa-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+  --wa-shimmer-from: #a1a1aa;
+  --wa-shimmer-to: #e4e4e7;
+}
+
+:host([data-wa-theme="light"]) {
+  --wa-panel-bg: #fff;
+  --wa-text-primary: #171717;
+  --wa-text-secondary: #737373;
+  --wa-surface-hover: rgba(0, 0, 0, 0.05);
+  --wa-surface-active: rgba(0, 0, 0, 0.08);
+  --wa-border-subtle: rgba(0, 0, 0, 0.08);
+  --wa-border-button: rgba(0, 0, 0, 0.15);
+  --wa-submit-bg: #171717;
+  --wa-submit-fg: #fff;
+  --wa-error-text: #dc2626;
+  --wa-error-bg: #fee2e2;
+  --wa-error-bg-hover: #fecaca;
+  --wa-shadow: 0 2px 12px rgba(0, 0, 0, 0.1), 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+  --wa-shimmer-from: #71717a;
+  --wa-shimmer-to: #c4c4c8;
+}
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: 0 solid;
+  }
+  button, input, textarea {
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    outline: none;
+  }
+  button { cursor: pointer; }
+  textarea { resize: none; }
+  textarea::-webkit-scrollbar { display: none; }
+  ::placeholder { color: var(--wa-text-secondary); opacity: 1; }
+}
+
+@utility shimmer-text {
+  background-image: linear-gradient(90deg, var(--wa-shimmer-from) 0%, var(--wa-shimmer-to) 50%, var(--wa-shimmer-from) 100%);
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: var(--animate-shimmer);
+}
+
+@utility press {
+  transition: transform 400ms var(--ease-spring), background-color 120ms ease-out;
+  &:active {
+    transform: scale(0.97);
+    transition-duration: 60ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
