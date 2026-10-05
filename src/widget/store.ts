@@ -4,6 +4,7 @@ import { ApiRequestError, createApi, type Api } from "./api";
 import type { AnnotatorConfig } from "./config";
 import { getGuestName, loadSession, safeGet, safeSet, saveSession, setGuestName } from "./lib/identity";
 import { signInWithPopup } from "./lib/member-auth";
+import { captureContext } from "./lib/context";
 import { resolveAnchor } from "./lib/selector";
 import { normalizePageUrl } from "./lib/url";
 
@@ -311,6 +312,15 @@ export const keepComposing = () => patchSelection({ phase: "compose" });
 
 let doneTimer: ReturnType<typeof setTimeout> | undefined;
 
+/** Context is a nice-to-have: never let an odd page stop the comment from posting. */
+const safeCaptureContext = (el: Element) => {
+  try {
+    return captureContext(el);
+  } catch {
+    return null;
+  }
+};
+
 export const submitSelection = async () => {
   const sel = selection.value;
   const body = draft.value.trim();
@@ -322,8 +332,9 @@ export const submitSelection = async () => {
       patchSelection({ phase: "compose" });
       return;
     }
+    const context = sel.el.isConnected ? safeCaptureContext(sel.el) : null;
     const thread = await authed(() =>
-      api.createThread({ pageUrl: pageUrl.value, pageTitle: document.title || null, anchor: sel.anchor, body }),
+      api.createThread({ pageUrl: pageUrl.value, pageTitle: document.title || null, anchor: sel.anchor, context, body }),
     );
     batch(() => {
       upsertThread(thread);

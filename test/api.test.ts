@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 import { SignJWT } from "jose";
-import type { Anchor, ProjectDTO, ThreadDTO, WidgetConfigDTO, WidgetSessionDTO, WorkspaceDTO } from "../src/shared/api";
+import type { Anchor, ElementContext, ProjectDTO, ThreadDTO, WidgetConfigDTO, WidgetSessionDTO, WorkspaceDTO } from "../src/shared/api";
 import { createApp } from "../src/worker/app";
 import { createDevProvider, createDevToken, type DevClaims } from "../src/worker/auth/identity";
 import { schema } from "../src/worker/db/client";
@@ -22,6 +22,17 @@ const anchor: Anchor = {
   offsetX: 0.5,
   offsetY: 0.25,
   viewportWidth: 1280,
+};
+
+const context: ElementContext = {
+  html: '<button id="save-button" class="btn btn-primary">Save</button>',
+  ancestors: ['<main class="settings">', '<div class="actions">'],
+  components: ["SaveButton", "SettingsForm"],
+  source: { file: "src/components/SaveButton.tsx", line: 12, column: 5 },
+  rect: { width: 96, height: 32 },
+  styles: { "background-color": "rgb(37, 99, 235)", "font-size": "14px" },
+  viewport: { width: 1280, height: 800, dpr: 2 },
+  userAgent: "Mozilla/5.0 (test)",
 };
 
 // Dashboard identities
@@ -270,6 +281,33 @@ describe("widget: guests mode", () => {
     const b = await createProject(alice, { name: "Other" });
     const guest = await guestSession(a.publicKey);
     expect((await postThread(b.publicKey, guest.token)).status).toBe(401);
+  });
+
+  test("stores the element context and returns it to the widget and the dashboard", async () => {
+    const p = await createProject(alice);
+    const guest = await guestSession(p.publicKey);
+    const res = await call("POST", `/api/w/${p.publicKey}/threads`, {
+      token: guest.token,
+      body: { pageUrl: PAGE, anchor, context, body: "Make this green" },
+    });
+    expect(res.status).toBe(201);
+    expect(((await res.json()) as ThreadDTO).context).toEqual(context);
+    const [listed] = (await (await dash("GET", `/projects/${p.id}/threads`, alice)).json()) as ThreadDTO[];
+    expect(listed!.context).toEqual(context);
+
+    // Older widgets don't send it.
+    const legacy = (await (await postThread(p.publicKey, guest.token)).json()) as ThreadDTO;
+    expect(legacy.context).toBeNull();
+  });
+
+  test("rejects oversized element context", async () => {
+    const p = await createProject(alice);
+    const guest = await guestSession(p.publicKey);
+    const res = await call("POST", `/api/w/${p.publicKey}/threads`, {
+      token: guest.token,
+      body: { pageUrl: PAGE, anchor, context: { ...context, html: "x".repeat(10_000) }, body: "hi" },
+    });
+    expect(res.status).toBe(422);
   });
 
   test("validates input", async () => {

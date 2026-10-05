@@ -13,10 +13,30 @@ export const anchorSchema = z.object({
   viewportWidth: z.number().int().positive().max(100_000).nullable(),
 });
 
+const size = z.number().nonnegative().max(1_000_000);
+
+export const elementContextSchema = z.object({
+  html: z.string().max(4000),
+  ancestors: z.array(z.string().max(400)).max(10),
+  components: z.array(z.string().max(120)).max(20),
+  source: z
+    .object({
+      file: z.string().min(1).max(500),
+      line: z.number().int().nonnegative().nullable(),
+      column: z.number().int().nonnegative().nullable(),
+    })
+    .nullable(),
+  rect: z.object({ width: size, height: size }),
+  styles: z.record(z.string().max(40), z.string().max(200)).refine((s) => Object.keys(s).length <= 40, "too many styles"),
+  viewport: z.object({ width: size, height: size, dpr: z.number().positive().max(10) }),
+  userAgent: z.string().max(400),
+});
+
 export const createThreadSchema = z.object({
   pageUrl: z.url().max(2000),
   pageTitle: z.string().max(300).nullish(),
   anchor: anchorSchema,
+  context: elementContextSchema.nullish(),
   body,
 });
 

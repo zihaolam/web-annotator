@@ -19,6 +19,28 @@ export interface Anchor {
   viewportWidth: number | null;
 }
 
+/**
+ * What the element looked like when it was annotated, captured so a person or a
+ * coding agent can find and fix it without opening the page. Everything is
+ * best-effort: framework details are only present in builds that expose them.
+ */
+export interface ElementContext {
+  /** Trimmed `outerHTML`: deep children collapsed, long attributes and text shortened. */
+  html: string;
+  /** Opening tags of the closest ancestors, outermost first. */
+  ancestors: string[];
+  /** Framework component names (React, Vue, Svelte), innermost first. */
+  components: string[];
+  /** Source location of the nearest component, when a dev build exposes it. */
+  source: { file: string; line: number | null; column: number | null } | null;
+  /** Rendered size in CSS pixels. */
+  rect: { width: number; height: number };
+  /** Computed styles that usually matter for visual feedback (defaults omitted). */
+  styles: Record<string, string>;
+  viewport: { width: number; height: number; dpr: number };
+  userAgent: string;
+}
+
 export interface AuthorDTO {
   type: AuthorType;
   id: string;
@@ -41,6 +63,8 @@ export interface ThreadDTO {
   pageUrl: string;
   pageTitle: string | null;
   anchor: Anchor;
+  /** `null` for threads created before context capture existed. */
+  context: ElementContext | null;
   status: ThreadStatus;
   author: AuthorDTO;
   resolvedAt: number | null;
@@ -53,6 +77,7 @@ export interface CreateThreadInput {
   pageUrl: string;
   pageTitle?: string | null;
   anchor: Anchor;
+  context?: ElementContext | null;
   body: string;
 }
 

@@ -126,6 +126,12 @@ You can set the same options in `window.WebAnnotatorConfig` before the script lo
 - A `MutationObserver` re-anchors pins when the DOM changes, and the widget reloads threads on SPA navigation.
 - Threads whose element is gone are flagged "element not found".
 
+**Handing feedback to a coding agent:**
+- When a thread is created, the widget also captures the element's context: a trimmed HTML snippet (deep children collapsed, `on*` handlers dropped, password and hidden input values redacted), its nearest ancestors, a few computed styles, its rendered size, and the viewport and user agent.
+- In dev builds it also records the framework component chain and source file: React fibers (`_debugSource`), Vue (`__file`) and Svelte (`__svelte_meta`).
+- **Copy for agent** turns a thread into Markdown an agent can act on: the comments, the component and `file:line`, the selector, the HTML and the styles. The button is on each dashboard thread and in the widget's thread popover. **Copy all for agent** in the inbox does the same for every listed thread.
+- `src/shared/prompt.ts` builds the prompt. Threads created before this feature have `context: null` and only include their selector.
+
 ## Development
 
 ```bash

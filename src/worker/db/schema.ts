@@ -1,5 +1,6 @@
 import { relations, sql } from "drizzle-orm";
 import { index, integer, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import type { ElementContext } from "../../shared/api";
 
 const timestamps = {
   createdAt: integer("created_at", { mode: "timestamp_ms" })
@@ -89,6 +90,8 @@ export const threads = sqliteTable(
     offsetX: real("offset_x").notNull().default(1),
     offsetY: real("offset_y").notNull().default(0),
     viewportWidth: integer("viewport_width"),
+    /** HTML snippet, component/source and styles captured at annotation time, for humans and coding agents. */
+    context: text("context", { mode: "json" }).$type<ElementContext>(),
     status: text("status", { enum: ["open", "resolved"] }).notNull().default("open"),
     ...author,
     resolvedAt: integer("resolved_at", { mode: "timestamp_ms" }),

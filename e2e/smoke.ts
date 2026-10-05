@@ -10,7 +10,7 @@ import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { SignJWT } from "jose";
 import { chromium, type Page } from "playwright-core";
-import type { ProjectDTO } from "../src/shared/api";
+import type { ProjectDTO, ThreadDTO } from "../src/shared/api";
 import { createDevToken, type DevClaims } from "../src/shared/dev-token";
 
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:8787";
@@ -199,6 +199,11 @@ await dash.locator("form").filter({ hasText: "Reply" }).first().getByPlaceholder
 await dash.getByRole("button", { name: "Reply", exact: true }).first().click();
 await dash.getByText("Thanks, on it!").waitFor();
 assert(true, "replied from the dashboard");
+const inbox = await dashboardApi<ThreadDTO[]>("GET", `/projects/${project!.id}/threads`);
+const brand = inbox.find((t) => t.comments[0]?.body.startsWith("Make this button"));
+assert(brand?.context?.html.startsWith(`<${brand.anchor.tagName}`), "threads carry the element's HTML for coding agents");
+assert(await dash.getByRole("button", { name: "Copy for agent" }).first().isVisible(), "threads can be copied as an agent prompt");
+await dash.locator("summary", { hasText: "Element" }).first().click();
 await dashShot("08-dashboard-inbox");
 
 await dash.goto(`${BASE}/app/`);

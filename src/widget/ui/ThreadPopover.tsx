@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import type { CommentDTO, ThreadDTO } from "../../shared/api";
+import { singleThreadPrompt } from "../../shared/prompt";
 import { VIEWPORT_MARGIN, relativeTime } from "../lib/geometry";
 import {
   activeThread,
@@ -15,7 +16,7 @@ import {
   reply,
   setStatus,
 } from "../store";
-import { IconCheck, IconPencil, IconTrash, IconUndo, IconX } from "./icons";
+import { IconCheck, IconCopy, IconPencil, IconTrash, IconUndo, IconX } from "./icons";
 import { PIN_SIZE, pinPoint } from "./Pins";
 import { Avatar, AutoTextarea, Chip, IconButton, NameField, SubmitButton, cx } from "./primitives";
 
@@ -116,6 +117,7 @@ export const ThreadPopover = () => {
   const listRef = useRef<HTMLUListElement>(null);
   const [replyText, setReplyText] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { busy, error, run, setError } = useAsync();
   const point = thread ? pinPoint(thread) : null;
 
@@ -192,6 +194,17 @@ export const ThreadPopover = () => {
           {resolvedThread ? "Resolved" : point ? `<${thread.anchor.tagName}>` : "Element not found"}
         </span>
         <span class="ml-auto flex items-center">
+          <IconButton
+            label={copied ? "Copied" : "Copy for agent"}
+            onClick={() =>
+              void navigator.clipboard.writeText(singleThreadPrompt(thread)).then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              })
+            }
+          >
+            {copied ? <IconCheck size={13} /> : <IconCopy size={13} />}
+          </IconButton>
           <IconButton
             label={resolvedThread ? "Reopen" : "Resolve"}
             disabled={busy}

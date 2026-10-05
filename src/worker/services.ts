@@ -1,5 +1,5 @@
 import { and, asc, count, desc, eq, gte } from "drizzle-orm";
-import type { Anchor, WidgetIdentity } from "../shared/api";
+import type { Anchor, ElementContext, WidgetIdentity } from "../shared/api";
 import type { Database } from "./db/client";
 import { comments, projects, threads, workspaces, type Project, type Workspace } from "./db/schema";
 import { HttpError } from "./http";
@@ -77,7 +77,7 @@ export const listThreads = async (
 export const createThread = async (
   db: Database,
   project: Project,
-  input: { pageUrl: string; pageTitle?: string | null; anchor: Anchor; body: string },
+  input: { pageUrl: string; pageTitle?: string | null; anchor: Anchor; context?: ElementContext | null; body: string },
   author: WidgetIdentity,
 ) => {
   await assertCommentQuota(db, project.workspaceId);
@@ -91,6 +91,7 @@ export const createThread = async (
       pageUrl: input.pageUrl,
       pageTitle: input.pageTitle ?? null,
       ...input.anchor,
+      context: input.context ?? null,
       ...authorColumns(author),
       createdAt: now,
       updatedAt: now,

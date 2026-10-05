@@ -33,6 +33,7 @@ export const toThreadDTO = (t: Thread & { comments: Comment[] }): ThreadDTO => (
     offsetY: t.offsetY,
     viewportWidth: t.viewportWidth,
   },
+  context: t.context ?? null,
   status: t.status,
   author: toAuthor(t),
   resolvedAt: t.resolvedAt?.getTime() ?? null,

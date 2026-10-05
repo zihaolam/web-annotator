@@ -1,5 +1,7 @@
+import { Fragment } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import type { CommentMode, ProjectDTO, ThreadDTO } from "../../shared/api";
+import { singleThreadPrompt, threadsToPrompt } from "../../shared/prompt";
 import type { AppContext } from "../main";
 import { navigate } from "../main";
 import { Avatar, Badge, Button, Card, Code, CopyButton, cx, ErrorText, Field, Input, relativeTime, Spinner, Textarea } from "../ui";
@@ -132,6 +134,38 @@ const userToken = jwt.sign(
 // ---------------------------------------------------------------------------
 // Inbox
 
+/** Where the comment points: component, source, selector and the captured HTML. */
+const ElementDetails = ({ thread }: { thread: ThreadDTO }) => {
+  const { anchor, context } = thread;
+  const source = context?.source;
+  const rows: [string, string][] = [];
+  if (context?.components.length) rows.push(["Component", context.components.join(" ← ")]);
+  if (source) rows.push(["Source", `${source.file}${source.line != null ? `:${source.line}` : ""}${source.line != null && source.column != null ? `:${source.column}` : ""}`]);
+  rows.push(["Selector", anchor.selector]);
+  if (context) rows.push(["Size", `${context.rect.width}×${context.rect.height}px · viewport ${context.viewport.width}×${context.viewport.height}`]);
+  return (
+    <details class="group border-b border-stone-100 px-4 py-2 text-xs dark:border-stone-800">
+      <summary class="cursor-pointer text-stone-500 select-none hover:text-stone-800 dark:hover:text-stone-200">
+        Element{context?.components[0] ? <span class="ml-1.5 font-mono text-stone-400">{context.components[0]}</span> : null}
+        {!context && <span class="ml-1.5 text-stone-400">(selector only: posted before context capture)</span>}
+      </summary>
+      <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+        {rows.map(([k, v]) => (
+          <Fragment key={k}>
+            <dt class="text-stone-500">{k}</dt>
+            <dd class="min-w-0 font-mono break-all">{v}</dd>
+          </Fragment>
+        ))}
+      </dl>
+      {context?.html && (
+        <pre class="mt-2 max-h-64 overflow-auto rounded-lg bg-stone-950 p-3 font-mono text-[12px] leading-relaxed text-stone-100 dark:bg-black">
+          <code>{context.html}</code>
+        </pre>
+      )}
+    </details>
+  );
+};
+
 const ThreadCard = ({ ctx, project, thread, onChange, onRemove }: {
   ctx: AppContext;
   project: ProjectDTO;
@@ -173,6 +207,7 @@ const ThreadCard = ({ ctx, project, thread, onChange, onRemove }: {
         <span class="truncate font-mono text-xs text-stone-500">{page}</span>
         <span class="font-mono text-xs text-stone-400">&lt;{thread.anchor.tagName}&gt;</span>
         <div class="ml-auto flex gap-1.5">
+          <CopyButton text={singleThreadPrompt(thread)} label="Copy for agent" />
           <Button
             size="sm"
             disabled={busy}
@@ -199,6 +234,7 @@ const ThreadCard = ({ ctx, project, thread, onChange, onRemove }: {
           )}
         </div>
       </div>
+      <ElementDetails thread={thread} />
       <ul class="divide-y divide-stone-100 dark:divide-stone-800">
         {thread.comments.map((c) => (
           <li key={c.id} class="flex gap-3 px-4 py-3">
@@ -249,17 +285,20 @@ const InboxTab = ({ ctx, project }: { ctx: AppContext; project: ProjectDTO }) =>
 
   return (
     <div class="grid gap-4">
-      <div class="flex gap-1 self-start rounded-lg bg-stone-100 p-1 text-sm dark:bg-stone-900">
-        {(["open", "resolved"] as const).map((s) => (
-          <button
-            key={s}
-            type="button"
-            class={cx("rounded-md px-3 py-1 capitalize", status === s ? "bg-white shadow-sm dark:bg-stone-800" : "text-stone-500")}
-            onClick={() => setStatus(s)}
-          >
-            {s}
-          </button>
-        ))}
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex gap-1 rounded-lg bg-stone-100 p-1 text-sm dark:bg-stone-900">
+          {(["open", "resolved"] as const).map((s) => (
+            <button
+              key={s}
+              type="button"
+              class={cx("rounded-md px-3 py-1 capitalize", status === s ? "bg-white shadow-sm dark:bg-stone-800" : "text-stone-500")}
+              onClick={() => setStatus(s)}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+        {!!threads?.length && <CopyButton text={threadsToPrompt(threads, project.name)} label={`Copy all ${threads.length} for agent`} />}
       </div>
       <ErrorText error={error} />
       {!threads && !error && <Spinner />}
