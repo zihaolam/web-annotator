@@ -45,7 +45,7 @@ const Pin = ({ thread, number, point }: { thread: ThreadDTO; number: number; poi
     >
       <button
         type="button"
-        aria-label={`Comment ${number} by ${thread.authorName}`}
+        aria-label={`Comment ${number} by ${thread.author.name}`}
         class={cx(
           "press pointer-events-auto flex size-6 animate-pop items-center justify-center rounded-full rounded-bl-none text-[11px] font-semibold tabular-nums shadow-panel",
           "ring-2 ring-white/90 transition-transform hover:scale-110",
@@ -64,8 +64,8 @@ const Pin = ({ thread, number, point }: { thread: ThreadDTO; number: number; poi
       {!active && first && (
         <div class="pointer-events-none invisible absolute top-0 left-[30px] w-max max-w-[240px] rounded-xl bg-panel px-2 py-1.5 font-sans text-[12px] leading-4 text-fg opacity-0 shadow-panel transition-opacity duration-100 group-hover:visible group-hover:opacity-100">
           <div class="flex items-center gap-1.5">
-            <Avatar name={first.authorName} size={16} />
-            <span class="font-semibold">{first.authorName}</span>
+            <Avatar name={first.author.name} url={first.author.avatarUrl} size={16} />
+            <span class="font-semibold">{first.author.name}</span>
             <span class="text-fg-muted">{relativeTime(first.createdAt)}</span>
           </div>
           <p class="mt-1 line-clamp-2 break-words text-fg">{first.body}</p>

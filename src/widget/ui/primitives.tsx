@@ -135,15 +135,25 @@ export const Kbd = ({ children }: { children: ComponentChildren }) => (
 
 const hue = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
 
-export const Avatar = ({ name, size = 20 }: { name: string; size?: number }) => (
+export const Avatar = ({ name, url, size = 20 }: { name: string; url?: string | null; size?: number }) =>
+  url ? (
+    <img
+      src={url}
+      alt=""
+      referrerpolicy="no-referrer"
+      class="shrink-0 rounded-full object-cover"
+      style={{ width: `${size}px`, height: `${size}px` }}
+      aria-hidden="true"
+    />
+  ) : (
   <span
     class="inline-flex shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white uppercase"
-    style={{ width: size, height: size, background: `hsl(${hue(name)} 62% 48%)` }}
+    style={{ width: `${size}px`, height: `${size}px`, background: `hsl(${hue(name)} 62% 48%)` }}
     aria-hidden="true"
   >
     {name.trim().charAt(0) || "?"}
   </span>
-);
+  );
 
 /** Auto-growing textarea (field-sizing with a JS fallback). Enter submits, Shift+Enter adds a newline. */
 export const AutoTextarea = forwardRef(
@@ -194,7 +204,7 @@ export const AutoTextarea = forwardRef(
           "block w-full min-h-4 overflow-y-auto bg-transparent text-[13px] leading-4 font-medium text-fg [scrollbar-width:none]",
           cls,
         )}
-        style={{ maxHeight }}
+        style={{ maxHeight: `${maxHeight}px` }}
         onInput={(e) => onValue(e.currentTarget.value)}
         onKeyDown={(e) => {
           if (e.isComposing) return;

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { shadowSafe } from "../scripts/build-widget-lib";
+import { shadowSafe } from "../scripts/build-lib";
 
 test("shadowSafe unwraps Tailwind's @property fallback so it applies inside shadow roots", () => {
   const css =

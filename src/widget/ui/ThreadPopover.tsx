@@ -1,12 +1,13 @@
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import type { CommentDTO, ThreadDTO } from "../../shared/api";
 import { VIEWPORT_MARGIN, relativeTime } from "../lib/geometry";
-import { getAuthorId, getAuthorName } from "../lib/identity";
 import {
   activeThread,
-  authorName,
   editComment,
+  guestName,
+  isMine,
   layoutTick,
+  needsGuestName,
   openThread,
   pinNumbers,
   removeComment,
@@ -41,7 +42,7 @@ const useAsync = () => {
 };
 
 const CommentItem = ({ thread, comment }: { thread: ThreadDTO; comment: CommentDTO }) => {
-  const mine = comment.authorId === getAuthorId();
+  const mine = isMine(comment.author.id);
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(comment.body);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -55,10 +56,10 @@ const CommentItem = ({ thread, comment }: { thread: ThreadDTO; comment: CommentD
 
   return (
     <li class="group/comment flex gap-2 px-3 py-2">
-      <Avatar name={comment.authorName} />
+      <Avatar name={comment.author.name} url={comment.author.avatarUrl} />
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-1.5">
-          <span class="truncate font-semibold">{comment.authorName}</span>
+          <span class="truncate font-semibold">{comment.author.name}</span>
           <span class="shrink-0 text-[11px] text-fg-muted" title={new Date(comment.createdAt).toLocaleString()}>
             {relativeTime(comment.createdAt)}
             {comment.updatedAt - comment.createdAt > 1000 && " · edited"}
@@ -154,13 +155,13 @@ export const ThreadPopover = () => {
   if (!thread) return null;
 
   const number = pinNumbers.value.get(thread.id);
-  const isAuthor = thread.authorId === getAuthorId();
+  const isAuthor = isMine(thread.author.id);
   const resolvedThread = thread.status === "resolved";
-  const needsName = !getAuthorName();
+  const needsName = needsGuestName.value;
 
   const sendReply = async () => {
     const body = replyText.trim();
-    if (!body || busy || !authorName.value.trim()) return;
+    if (!body || busy || (needsName && !guestName.value.trim())) return;
     if (await run(() => reply(thread.id, body))) setReplyText("");
   };
 
@@ -170,7 +171,7 @@ export const ThreadPopover = () => {
       role="dialog"
       aria-label={`Comment thread ${number}`}
       class="pointer-events-auto fixed top-0 left-0 z-40 flex max-h-[min(480px,calc(100vh-16px))] animate-fade-in flex-col overflow-hidden rounded-[14px] bg-panel font-sans text-[13px] leading-[18px] font-medium text-fg antialiased shadow-panel"
-      style={{ width: WIDTH }}
+      style={{ width: `${WIDTH}px` }}
       onKeyDown={(e) => {
         if (e.key === "Escape") {
           e.stopPropagation();
@@ -226,7 +227,7 @@ export const ThreadPopover = () => {
       </ul>
 
       <footer class="flex flex-col gap-1.5 border-t-[0.5px] border-line px-3 py-2">
-        {needsName && <NameField value={authorName.value} onValue={(v) => (authorName.value = v)} />}
+        {needsName && <NameField value={guestName.value} onValue={(v) => (guestName.value = v)} />}
         <div class="flex items-end gap-2">
           <AutoTextarea
             value={replyText}
@@ -237,7 +238,7 @@ export const ThreadPopover = () => {
             autoFocus={!needsName}
           />
           <SubmitButton
-            disabled={busy || !replyText.trim() || !authorName.value.trim()}
+            disabled={busy || !replyText.trim() || (needsName && !guestName.value.trim())}
             onClick={() => void sendReply()}
             label="Reply"
           />

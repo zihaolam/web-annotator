@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run build:widget && bun run db:migrate:local && bun run db:seed:local && bun run --parallel dev:widget dev:worker",
-    "dev:widget": "NODE_ENV=development bun scripts/build-widget.ts --watch",
+    "dev": "bun run build:assets && bun run db:migrate:local && bun run db:seed:local && bun run --parallel dev:widget dev:worker",
+    "dev:widget": "NODE_ENV=development bun scripts/build.ts --watch",
     "dev:worker": "wrangler dev",
-    "build": "bun run build:widget",
-    "build:widget": "bun scripts/build-widget.ts",
+    "build": "bun run build:assets",
+    "build:assets": "bun scripts/build.ts",
     "deploy": "bun run build && wrangler d1 migrations apply web-annotator --remote && wrangler deploy",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply web-annotator --local",
@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "drizzle-orm": "^0.45.3",
+    "jose": "^6.2.12",
     "zod": "^4.6.5"
   },
   "devDependencies": {

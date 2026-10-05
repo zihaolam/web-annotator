@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { safeGet, safeSet } from "../lib/identity";
 import {
   getConfig,
+  notice,
   listOpen,
   loadState,
   openCount,
@@ -71,6 +72,36 @@ const snap = (cx: number, cy: number): Pick<ToolbarState, "edge" | "ratio"> => {
   const [edge] = distances.sort((a, b) => a[1] - b[1])[0]!;
   const ratio = edge === "top" || edge === "bottom" ? cx / vw : cy / vh;
   return { edge, ratio: Math.min(Math.max(ratio, 0), 1) };
+};
+
+/** Transient message above (or beside) the toolbar: sign-in prompts, errors. */
+export const Notice = () => {
+  const n = notice.value;
+  const tb = toolbarRect.value;
+  if (!n || !tb) return null;
+  const edge = toolbarEdge.value;
+  const pos =
+    edge === "top"
+      ? { left: tb.left + tb.width / 2, top: tb.bottom + 10, transform: "translateX(-50%)" }
+      : edge === "bottom"
+        ? { left: tb.left + tb.width / 2, top: tb.top - 10, transform: "translate(-50%, -100%)" }
+        : edge === "left"
+          ? { left: tb.right + 10, top: tb.top + tb.height / 2, transform: "translateY(-50%)" }
+          : { left: tb.left - 10, top: tb.top + tb.height / 2, transform: "translate(-100%, -50%)" };
+  const style = { left: `${pos.left}px`, top: `${pos.top}px`, transform: pos.transform };
+  return (
+    <div class="pointer-events-none fixed z-50" style={style}>
+      <div
+        role={n.tone === "error" ? "alert" : "status"}
+        class={cx(
+          "max-w-[320px] animate-fade-in rounded-full bg-panel px-3 py-1.5 font-sans text-[12px] leading-4 font-medium shadow-panel",
+          n.tone === "error" ? "text-danger" : "text-fg",
+        )}
+      >
+        {n.text}
+      </div>
+    </div>
+  );
 };
 
 export const Toolbar = () => {

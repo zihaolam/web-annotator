@@ -1,9 +1,6 @@
-import type { Author } from "../../shared/api";
+import type { WidgetSessionDTO } from "../../shared/api";
 
-const ID_KEY = "web-annotator:author-id";
-const NAME_KEY = "web-annotator:author-name";
-
-const safeGet = (key: string): string | null => {
+export const safeGet = (key: string): string | null => {
   try {
     return localStorage.getItem(key);
   } catch {
@@ -11,7 +8,7 @@ const safeGet = (key: string): string | null => {
   }
 };
 
-const safeSet = (key: string, value: string) => {
+export const safeSet = (key: string, value: string) => {
   try {
     localStorage.setItem(key, value);
   } catch {
@@ -19,24 +16,32 @@ const safeSet = (key: string, value: string) => {
   }
 };
 
-let memoryId: string | null = null;
-
-/** Anonymous, per-browser identity. Names are self-declared; there is no login. */
-export const getAuthorId = (): string => {
-  const stored = safeGet(ID_KEY) ?? memoryId;
-  if (stored) return stored;
-  memoryId = crypto.randomUUID();
-  safeSet(ID_KEY, memoryId);
-  return memoryId;
+export const safeRemove = (key: string) => {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    /* ignore */
+  }
 };
 
-export const getAuthorName = (): string | null => safeGet(NAME_KEY);
+const sessionKey = (projectKey: string) => `web-annotator:session:${projectKey}`;
+const GUEST_NAME_KEY = "web-annotator:guest-name";
 
-export const setAuthorName = (name: string) => safeSet(NAME_KEY, name.trim());
-
-export const getAuthor = (): Author | null => {
-  const name = getAuthorName();
-  return name ? { id: getAuthorId(), name } : null;
+/** The widget session for a project (one per browser), if it hasn't expired. */
+export const loadSession = (projectKey: string): WidgetSessionDTO | null => {
+  try {
+    const parsed = JSON.parse(safeGet(sessionKey(projectKey)) ?? "null") as WidgetSessionDTO | null;
+    if (!parsed?.token || parsed.expiresAt < Date.now() + 60_000) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
 };
 
-export { safeGet, safeSet };
+export const saveSession = (projectKey: string, session: WidgetSessionDTO | null) => {
+  if (session) safeSet(sessionKey(projectKey), JSON.stringify(session));
+  else safeRemove(sessionKey(projectKey));
+};
+
+export const getGuestName = (): string => safeGet(GUEST_NAME_KEY) ?? "";
+export const setGuestName = (name: string) => safeSet(GUEST_NAME_KEY, name.trim());

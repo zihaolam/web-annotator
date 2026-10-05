@@ -1,8 +1,10 @@
 import { useLayoutEffect, useRef } from "preact/hooks";
 import { VIEWPORT_MARGIN, relativeTime } from "../lib/geometry";
 import {
+  commentMode,
   focusThread,
   highlightThreadId,
+  identity,
   listFilter,
   listOpen,
   loadError,
@@ -12,7 +14,11 @@ import {
   pageUrl,
   pinNumbers,
   resolved,
+  signingIn,
+  signInMember,
+  signOut,
   toggleList,
+  widgetConfig,
 } from "../store";
 import { IconX } from "./icons";
 import { toolbarEdge, toolbarRect } from "./Toolbar";
@@ -66,7 +72,7 @@ export const ThreadList = () => {
       role="dialog"
       aria-label="Comments on this page"
       class="pointer-events-auto fixed top-0 left-0 z-40 flex max-h-[min(520px,calc(100vh-96px))] animate-fade-in flex-col overflow-hidden rounded-[14px] bg-panel font-sans text-[13px] leading-[18px] font-medium text-fg antialiased shadow-panel"
-      style={{ width: WIDTH }}
+      style={{ width: `${WIDTH}px` }}
     >
       <header class="flex items-center gap-2 border-b-[0.5px] border-line py-1.5 pr-1.5 pl-3">
         <div class="min-w-0 flex-1">
@@ -101,7 +107,26 @@ export const ThreadList = () => {
             </button>
           </li>
         )}
-        {loadState.value !== "error" && shown.length === 0 && (
+        {loadState.value === "signed-out" && (
+          <li class="flex flex-col items-center gap-2 px-3 py-6 text-center text-fg-muted">
+            {commentMode.value === "members" ? (
+              <>
+                <span>Comments on this site are private to the {widgetConfig.value?.projectName} team.</span>
+                <button
+                  type="button"
+                  disabled={signingIn.value}
+                  class="press rounded-full bg-submit px-3 py-1 text-submit-fg disabled:opacity-50"
+                  onClick={() => void signInMember()}
+                >
+                  {signingIn.value ? "Signing in…" : "Sign in to see comments"}
+                </button>
+              </>
+            ) : (
+              <span>Sign in to {widgetConfig.value?.projectName ?? "this site"} to see and leave comments.</span>
+            )}
+          </li>
+        )}
+        {loadState.value !== "error" && loadState.value !== "signed-out" && shown.length === 0 && (
           <li class="px-3 py-6 text-center text-fg-muted">
             {filter === "open" ? "No open comments. Press the comment button and click any element." : "Nothing resolved yet."}
           </li>
@@ -129,8 +154,8 @@ export const ThreadList = () => {
                 </span>
                 <span class="min-w-0 flex-1">
                   <span class="flex items-center gap-1.5">
-                    <Avatar name={t.authorName} size={16} />
-                    <span class="truncate font-semibold">{t.authorName}</span>
+                    <Avatar name={t.author.name} url={t.author.avatarUrl} size={16} />
+                    <span class="truncate font-semibold">{t.author.name}</span>
                     <span class="shrink-0 text-[11px] text-fg-muted">{relativeTime(t.createdAt)}</span>
                   </span>
                   <span class="mt-0.5 line-clamp-2 break-words text-fg">{first?.body}</span>
@@ -145,6 +170,21 @@ export const ThreadList = () => {
           );
         })}
       </ul>
+
+      {identity.value && (
+        <footer class="flex items-center gap-1.5 border-t-[0.5px] border-line px-3 py-1.5 text-[12px] text-fg-muted">
+          <Avatar name={identity.value.name} url={identity.value.avatarUrl} size={16} />
+          <span class="min-w-0 flex-1 truncate">
+            {identity.value.type === "guest" ? "Commenting as " : "Signed in as "}
+            <span class="text-fg">{identity.value.name}</span>
+          </span>
+          {identity.value.type !== "verified" && (
+            <button type="button" class="hover:text-fg" onClick={() => void signOut()}>
+              {identity.value.type === "guest" ? "Change name" : "Sign out"}
+            </button>
+          )}
+        </footer>
+      )}
     </div>
   );
 };

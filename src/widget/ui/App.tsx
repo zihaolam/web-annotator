@@ -24,7 +24,7 @@ import { Pins } from "./Pins";
 import { SelectionPanel } from "./SelectionPanel";
 import { ThreadList } from "./ThreadList";
 import { ThreadPopover } from "./ThreadPopover";
-import { Toolbar } from "./Toolbar";
+import { Notice, Toolbar } from "./Toolbar";
 
 /** True when the key event comes from something the user is typing into (page or widget). */
 const isTypingTarget = (e: KeyboardEvent): boolean => {
@@ -168,10 +168,6 @@ export const App = ({ host }: { host: HTMLElement }) => {
   useOutsideClick(host);
   useLayoutTracking(host);
 
-  useEffect(() => {
-    void loadThreads();
-  }, []);
-
   const active = picking.value;
   return (
     <>
@@ -183,6 +179,7 @@ export const App = ({ host }: { host: HTMLElement }) => {
       <ThreadPopover />
       <ThreadList />
       <Toolbar />
+      <Notice />
     </>
   );
 };

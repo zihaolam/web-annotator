@@ -1,17 +1,17 @@
 import { describeElement } from "../lib/hit-test";
 import { rectOf } from "../lib/geometry";
 import {
-  authorName,
   cancelSelection,
   draft,
+  guestName,
   keepComposing,
   layoutTick,
   requestCancelSelection,
   retrySelection,
+  needsGuestName,
   selection,
   submitSelection,
 } from "../store";
-import { getAuthorName } from "../lib/identity";
 import { Anchored, AutoTextarea, Chip, NameField, SubmitButton, TagBadge, cx } from "./primitives";
 import { IconAlert, IconCheck, IconLoader } from "./icons";
 
@@ -27,7 +27,7 @@ export const SelectionPanel = () => {
   const rect = rectOf(sel.el);
   const anchorX = rect.left + rect.width * sel.anchor.offsetX;
   const { tag, detail } = describeElement(sel.el);
-  const needsName = !getAuthorName();
+  const needsName = needsGuestName.value;
 
   if (sel.phase === "done") {
     return (
@@ -73,7 +73,7 @@ export const SelectionPanel = () => {
   }
 
   const discarding = sel.phase === "discard";
-  const canSubmit = draft.value.trim().length > 0 && authorName.value.trim().length > 0;
+  const canSubmit = draft.value.trim().length > 0 && (!needsName || guestName.value.trim().length > 0);
 
   return (
     <Anchored target={rect} anchorX={anchorX} interactive>
@@ -99,7 +99,7 @@ export const SelectionPanel = () => {
             </div>
           ) : (
             <>
-              {needsName && <NameField value={authorName.value} onValue={(v) => (authorName.value = v)} />}
+              {needsName && <NameField value={guestName.value} onValue={(v) => (guestName.value = v)} />}
               <div class="flex items-end gap-2">
                 <AutoTextarea
                   value={draft.value}

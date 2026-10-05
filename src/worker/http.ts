@@ -6,6 +6,7 @@ export class HttpError extends Error {
     readonly status: number,
     message: string,
     readonly details?: unknown,
+    readonly code?: string,
   ) {
     super(message);
   }
@@ -19,7 +20,7 @@ export const json = (data: unknown, init: ResponseInit = {}): Response =>
 
 export const errorResponse = (err: unknown): Response => {
   if (err instanceof HttpError) {
-    const body: ApiError = { error: err.message, details: err.details };
+    const body: ApiError = { error: err.message, code: err.code, details: err.details };
     return json(body, { status: err.status });
   }
   console.error(err);
@@ -35,17 +36,15 @@ export const readJson = async <T>(request: Request, schema: ZodType<T>): Promise
   }
   const parsed = schema.safeParse(raw);
   if (!parsed.success) {
-    throw new HttpError(422, "Invalid request body", parsed.error.issues);
+    throw new HttpError(422, "Invalid request body", parsed.error.issues, "invalid_body");
   }
   return parsed.data;
 };
 
-export const AUTHOR_HEADER = "x-annotator-author-id";
-
-export const requireAuthorId = (request: Request): string => {
-  const id = request.headers.get(AUTHOR_HEADER);
-  if (!id) throw new HttpError(401, `Missing ${AUTHOR_HEADER} header`);
-  return id;
+export const bearerToken = (request: Request): string | null => {
+  const header = request.headers.get("authorization");
+  const match = header?.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1]!.trim() : null;
 };
 
 type Params = Record<string, string>;

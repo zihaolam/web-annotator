@@ -1,9 +1,5 @@
 import { z } from "zod";
-
-const author = z.object({
-  id: z.string().trim().min(1).max(64),
-  name: z.string().trim().min(1).max(80),
-});
+import { COMMENT_MODES, PLAN_IDS } from "./db/schema";
 
 const body = z.string().trim().min(1).max(5000);
 
@@ -22,22 +18,43 @@ export const createThreadSchema = z.object({
   pageTitle: z.string().max(300).nullish(),
   anchor: anchorSchema,
   body,
-  author,
 });
 
-export const updateThreadSchema = z.object({
-  status: z.enum(["open", "resolved"]),
+export const updateThreadSchema = z.object({ status: z.enum(["open", "resolved"]) });
+
+export const commentBodySchema = z.object({ body });
+
+export const guestSessionSchema = z.object({
+  name: z.string().trim().min(1).max(80),
+  /** An existing guest token, so renaming keeps the same guest identity. */
+  token: z.string().max(4000).optional(),
 });
 
-export const createCommentSchema = z.object({ body, author });
+export const verifiedSessionSchema = z.object({ token: z.string().min(1).max(4000) });
 
-export const updateCommentSchema = z.object({ body });
+export const memberSessionSchema = z.object({ origin: z.url().max(300) });
+
+/** `https://app.example.com` (no path, no trailing slash). */
+const origin = z
+  .url()
+  .max(300)
+  .transform((value) => new URL(value).origin)
+  .refine((value) => value !== "null", "must be an http(s) origin");
 
 export const createProjectSchema = z.object({
-  id: z
-    .string()
-    .regex(/^[a-z0-9][a-z0-9-]{1,62}$/, "lowercase letters, digits and dashes")
-    .optional(),
   name: z.string().trim().min(1).max(120),
-  allowedOrigins: z.array(z.url()).max(50).default([]),
+  allowedOrigins: z.array(origin).max(50).default([]),
+  commentMode: z.enum(COMMENT_MODES).default("guests"),
 });
+
+export const updateProjectSchema = z
+  .object({
+    name: z.string().trim().min(1).max(120),
+    allowedOrigins: z.array(origin).max(50),
+    commentMode: z.enum(COMMENT_MODES),
+  })
+  .partial();
+
+export const rotateKeySchema = z.object({ key: z.enum(["publicKey", "identitySecret"]) });
+
+export const updateWorkspaceSchema = z.object({ plan: z.enum(PLAN_IDS) });

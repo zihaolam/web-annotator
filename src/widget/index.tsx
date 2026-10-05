@@ -1,10 +1,9 @@
 import { render } from "preact";
 import css from "../../dist/build/widget.css" with { type: "text" };
-import { createApi } from "./api";
 import { readConfig, type AnnotatorConfig } from "./config";
 import { setHostElement } from "./lib/hit-test";
 import { watchTheme } from "./lib/theme";
-import { getConfig, init, loadThreads, startPicking, stopPicking } from "./store";
+import { identify, init, loadThreads, signOut, startPicking, stopPicking } from "./store";
 import { App } from "./ui/App";
 
 const HOST_ATTRIBUTE = "data-web-annotator";
@@ -16,6 +15,9 @@ declare global {
       open: () => void;
       close: () => void;
       reload: () => Promise<void>;
+      /** Verified mode: pass a user token signed by your backend with the project's identity secret. */
+      identify: (userToken: string) => Promise<void>;
+      signOut: () => Promise<void>;
       destroy: () => void;
     };
   }
@@ -28,7 +30,6 @@ declare global {
  */
 const mount = (config: AnnotatorConfig | null) => {
   if (window.WebAnnotator || !config) return;
-  init(createApi(config), config);
 
   const host = document.createElement("div");
   host.setAttribute(HOST_ATTRIBUTE, "");
@@ -56,7 +57,9 @@ const mount = (config: AnnotatorConfig | null) => {
 
   setHostElement(host);
   document.body.appendChild(host);
-  const unwatchTheme = watchTheme(host, getConfig().theme);
+  const unwatchTheme = watchTheme(host, config.theme);
+  // init() stores the config synchronously before its first await, so the UI can read it.
+  void init(config);
   render(<App host={host} />, root);
 
   const keepMounted = new MutationObserver(() => {
@@ -74,9 +77,11 @@ const mount = (config: AnnotatorConfig | null) => {
 
   window.WebAnnotator = {
     version: process.env.WEB_ANNOTATOR_VERSION as string,
-    open: startPicking,
+    open: () => void startPicking(),
     close: stopPicking,
     reload: loadThreads,
+    identify,
+    signOut,
     destroy: () => {
       keepMounted.disconnect();
       keepMountedHtml.disconnect();
